@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-body text-white;
+    background: #07111F;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold;
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #050A14; }
+  ::-webkit-scrollbar-thumb { background: #0078D4; border-radius: 4px; }
+}
+
+@layer components {
+  /* ── Eye tickle animation ── */
+  .eye-squish {
+    animation: eyeTickle 0.75s ease-in-out;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* ── Arm wave animation ── */
+  .arm-wave {
+    animation: robotWave 2.3s ease-in-out;
+    transform-box: fill-box;
+    transform-origin: top center;
+  }
+
+  /* ── Glass Fluent ── */
+  .glass {
+    background: rgba(10, 25, 47, 0.45);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid rgba(0, 153, 255, 0.1);
+    border-radius: 1rem;
+  }
+
+  .glass-hover {
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .glass-hover:hover {
+    background: rgba(16, 42, 67, 0.6);
+    border-color: rgba(0, 153, 255, 0.2);
+  }
+
+  .glass-card {
+    background: rgba(10, 25, 47, 0.45);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid rgba(0, 153, 255, 0.1);
+    border-radius: 1rem;
+    transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  }
+  .glass-card:hover {
+    background: rgba(16, 42, 67, 0.6);
+    border-color: rgba(0, 153, 255, 0.2);
+  }
+
+  .glass-strong {
+    background: rgba(16, 42, 67, 0.58);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    border: 1px solid rgba(0, 153, 255, 0.16);
+    border-radius: 1rem;
+  }
+
+  /* ── Glows ── */
+  .glow-accent {
+    box-shadow: 0 0 40px rgba(0, 153, 255, 0.22), 0 0 80px rgba(0, 120, 212, 0.1);
+  }
+  .glow-gold {
+    box-shadow: 0 0 40px rgba(223, 206, 130, 0.15), 0 0 80px rgba(223, 206, 130, 0.06);
+  }
+  .glow-white {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
+  }
+
+  /* ── Gradients ── */
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #dfce82, #f0e4a0, #c4b55e);
+  }
+  .text-gradient-accent {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #48CAE4, #0099FF, #0078D4);
+  }
+
+  /* ── Gradient button ── */
+  .btn-gradient {
+    background: linear-gradient(135deg, #0078D4, #0099FF);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(0, 120, 212, 0.3);
+    transition: all 0.2s;
+  }
+  .btn-gradient:hover {
+    background: linear-gradient(135deg, #0099FF, #00B4D8);
+    box-shadow: 0 4px 24px rgba(0, 153, 255, 0.4);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes robotFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-14px); }
+}
+
+@keyframes eyeTickle {
+  0%, 100% { transform: scaleY(1);    }
+  15%      { transform: scaleY(0.12); }
+  35%      { transform: scaleY(1.3);  }
+  55%      { transform: scaleY(0.08); }
+  75%      { transform: scaleY(1.2);  }
+  90%      { transform: scaleY(0.18); }
+}
+
+@keyframes greetPop {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.88); }
+  18%  { opacity: 1; transform: translateX(-50%) translateY(0)    scale(1);    }
+  78%  { opacity: 1; transform: translateX(-50%) translateY(0)    scale(1);    }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.94); }
+}
+
+@keyframes robotWave {
+  0%   { transform: rotate(0deg);    }
+  12%  { transform: rotate(-110deg); }
+  26%  { transform: rotate(-130deg); }
+  40%  { transform: rotate(-105deg); }
+  54%  { transform: rotate(-130deg); }
+  68%  { transform: rotate(-105deg); }
+  82%  { transform: rotate(-22deg);  }
+  100% { transform: rotate(0deg);    }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  /* Subtle grid — tinted blue */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(0, 153, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 153, 255, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Radial glow spots */
+  .bg-glow-accent {
+    background: radial-gradient(ellipse at center, rgba(0, 120, 212, 0.18) 0%, transparent 65%);
+  }
+  .bg-glow-blue {
+    background: radial-gradient(ellipse at center, rgba(0, 180, 216, 0.14) 0%, transparent 65%);
+  }
+  .bg-glow-gold {
+    background: radial-gradient(ellipse at center, rgba(223, 206, 130, 0.08) 0%, transparent 65%);
+  }
+}
