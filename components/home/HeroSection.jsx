@@ -314,22 +314,14 @@ export default function HeroSection() {
 
           {/* ── LEFT: Text ── */}
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-            <div className="mb-5 sm:mb-7">
-              <Image
-                src="/images/neuro-logo.png"
-                alt="Neurolinks"
-                width={180}
-                height={72}
-                className="object-contain drop-shadow-2xl w-28 sm:w-36 md:w-40 h-auto mx-auto lg:mx-0"
-                priority
-              />
-            </div>
             <div className="inline-flex items-center gap-2 glass px-4 py-2 mb-6 text-xs font-heading font-semibold tracking-widest uppercase text-accent-subtle rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-accent-light animate-pulse" />
               Automatización con IA · Resultados reales
             </div>
-            <h1 className="font-heading font-extrabold text-white text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] mb-6">
-              Grandes estrategias para{" "}
+            <h1 className="font-heading font-extrabold text-white text-4xl sm:text-5xl lg:text-5xl xl:text-5xl leading-[1.1] mb-6">
+              Grandes estrategias
+              <br className="hidden lg:block" />
+              {" "}para{" "}
               <span className="text-gradient-accent">grandes empresas</span>
             </h1>
             <p className="text-white/50 text-base sm:text-lg max-w-xl mb-10 leading-relaxed">
@@ -339,6 +331,18 @@ export default function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <Button href="/#contacto" variant="primary" size="lg">Quiero una estrategia</Button>
               <Button href="/#servicios" variant="outline" size="lg">Ver servicios</Button>
+            </div>
+
+            <div className="mt-12 flex flex-col items-center lg:items-start gap-2">
+              <p className="text-white/25 text-[9px] font-heading font-semibold tracking-[0.2em] uppercase">
+                Integración certificada con
+              </p>
+              <div className="inline-flex items-center gap-3 glass px-5 py-2.5 rounded-2xl">
+                <Image src="/images/meta_logo.svg" alt="Meta" width={56} height={12} className="brightness-0 invert opacity-55" />
+                <div className="w-px h-4 bg-white/[0.12]" />
+                <Image src="/images/meta_verified.svg" alt="Meta Business Partner verificado" width={18} height={18} />
+                <span className="text-white/45 text-[11px] font-heading font-semibold">Business Partner Oficial</span>
+              </div>
             </div>
           </div>
 

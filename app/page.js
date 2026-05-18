@@ -1,5 +1,4 @@
 import HeroSection         from "@/components/home/HeroSection";
-import MetaPartnerStrip   from "@/components/home/MetaPartnerStrip";
 import ServicesSection     from "@/components/home/ServicesSection";
 import PricingSection    from "@/components/home/PricingSection";
 import AsistentesPreview from "@/components/home/AsistentesPreview";
@@ -32,7 +31,6 @@ export default function Home() {
   return (
     <>
       <HeroSection />
-      <MetaPartnerStrip />
 
       <Divider />
       <AltSection><ServicesSection /></AltSection>

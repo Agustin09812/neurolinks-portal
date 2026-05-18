@@ -37,7 +37,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 md:gap-12">
           {/* Brand */}
           <div>
-            <span className="font-heading font-extrabold text-xl text-gradient-gold tracking-wider">NEUROLINKS</span>
+            <div className="flex items-center gap-2">
+              <Image src="/images/neuro-logo.png" alt="Neurolinks" width={24} height={24} className="h-6 w-auto object-contain" />
+              <span className="font-heading font-extrabold text-xl text-gradient-gold tracking-wider">NEUROLINKS</span>
+            </div>
             <p className="mt-3 text-white/35 text-xs leading-relaxed max-w-xs">
               Grandes estrategias para grandes empresas. Automatización con IA para potenciar tus ventas.
             </p>

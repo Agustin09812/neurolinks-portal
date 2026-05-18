@@ -150,7 +150,7 @@ export default function AboutSection() {
               />
               <div className="relative flex items-center justify-center w-[72px] h-[72px]">
                 <ProgressRing value={v98} active={visible} />
-                <span className="absolute text-[11px] font-heading font-bold text-white/70 rotate-90">
+                <span className="absolute text-[11px] font-heading font-bold text-white/70">
                   {v98}%
                 </span>
               </div>
