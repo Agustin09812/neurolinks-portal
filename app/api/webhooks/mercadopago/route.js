@@ -34,15 +34,29 @@ export async function POST(request) {
     }
 
     // 2 — Get payment status from Mercado Pago using seller's accessToken
-    const mp          = new MercadoPagoConfig({ accessToken });
-    const paymentApi  = new Payment(mp);
-    const paymentData = await paymentApi.get({ id: String(paymentId) });
+    let paymentData;
+    try {
+      const mp          = new MercadoPagoConfig({ accessToken });
+      const paymentApi  = new Payment(mp);
+      paymentData = await paymentApi.get({ id: String(paymentId) });
+    } catch (apiErr) {
+      console.warn(`[Webhook] Ignored mock or non-existent payment ID '${paymentId}':`, apiErr.message);
+      // Return 200 OK to Mercado Pago so they don't retry and the MP test console shows a successful response
+      return NextResponse.json({ ok: true, message: "Ignored invalid/mock payment ID" });
+    }
 
     if (paymentData.status !== "approved") {
       return NextResponse.json({ ok: true });
     }
 
     const clienteId = paymentData.external_reference;
+
+    // Validate UUID format to prevent database syntax errors (22P02: invalid input syntax for uuid)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!clienteId || !uuidRegex.test(clienteId)) {
+      console.warn(`[Webhook] Ignored payment with invalid/missing external_reference (client UUID): '${clienteId}'`);
+      return NextResponse.json({ ok: true, message: "Ignored invalid external_reference format" });
+    }
 
     // Fetch the client details
     const { data: cliente } = await adminDb
@@ -112,7 +126,7 @@ export async function POST(request) {
     }
 
     // 4 — Save all dynamic activation data arrays to Supabase
-    await adminDb
+    const { error: updateError } = await adminDb
       .from("clientes")
       .update({
         backoffice_activado: true,
@@ -123,6 +137,11 @@ export async function POST(request) {
         updated_at:          new Date().toISOString(),
       })
       .eq("id", clienteId);
+
+    if (updateError) {
+      console.error(`[Webhook] Failed to update client ${clienteId} status in database:`, updateError);
+      return NextResponse.json({ error: "Failed to update client status" }, { status: 500 });
+    }
 
     console.log(`[Webhook] Client ${clienteId} activated successfully with ${count} line(s).`);
 
