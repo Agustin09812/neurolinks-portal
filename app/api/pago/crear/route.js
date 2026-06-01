@@ -9,14 +9,6 @@ export async function POST() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Instant Sandbox Redirect: Use the user's pre-created test plan if the active token is a TEST- credential
-    const mainToken = process.env.MP_ACCESS_TOKEN || "";
-    if (mainToken.startsWith("TEST-")) {
-      return NextResponse.json({
-        init_point: "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=1036eadd76e2446a8cc87b9b7c258e12"
-      });
-    }
-
     // 1. Fetch current client settings
     const { data: cliente } = await supabase
       .from("clientes")
@@ -25,6 +17,34 @@ export async function POST() {
       .single();
 
     if (!cliente) return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
+
+    // Dynamic Sandbox Redirect: Binds the customer ID as external_reference to your custom test plan
+    const mainToken = process.env.MP_ACCESS_TOKEN || "";
+    if (mainToken.startsWith("TEST-")) {
+      try {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+        const mpPreapprovalRes = await fetch("https://api.mercadopago.com/preapproval", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${mainToken}`,
+          },
+          body: JSON.stringify({
+            preapproval_plan_id: "1036eadd76e2446a8cc87b9b7c258e12",
+            payer_email: user.email || "test_user@clientesneurolinks.com",
+            back_url: `${siteUrl}/portal/pago/exito`,
+            external_reference: String(cliente.id),
+          }),
+        });
+
+        const mpPreapprovalData = await mpPreapprovalRes.json();
+        if (mpPreapprovalRes.ok && mpPreapprovalData.init_point) {
+          return NextResponse.json({ init_point: mpPreapprovalData.init_point });
+        }
+      } catch (err) {
+        console.error("[Crear Pago Test] Dynamic sandbox redirect failed:", err);
+      }
+    }
 
     const adminDb = createAdminClient();
     let vendedorId = cliente.vendedor_id;
