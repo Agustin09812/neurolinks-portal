@@ -120,6 +120,34 @@ export default function PagoClient({ cliente, planesPrincipales = [] }) {
         </p>
       </div>
 
+      {/* Region/Country Pill Selector */}
+      <div className="flex justify-center mb-8">
+        <div className="inline-flex p-1 rounded-full bg-white/[0.02] border border-white/[0.08] backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => setRegion("AR")}
+            className={`px-6 py-2.5 rounded-full text-xs font-semibold transition-all duration-300 flex items-center gap-2 ${
+              region === "AR"
+                ? "bg-accent text-white shadow-[0_0_15px_rgba(0,153,255,0.3)]"
+                : "text-white/40 hover:text-white/70"
+            }`}
+          >
+            <span>🇦🇷</span> Argentina
+          </button>
+          <button
+            type="button"
+            onClick={() => setRegion("INT")}
+            className={`px-6 py-2.5 rounded-full text-xs font-semibold transition-all duration-300 flex items-center gap-2 ${
+              region === "INT"
+                ? "bg-accent text-white shadow-[0_0_15px_rgba(0,153,255,0.3)]"
+                : "text-white/40 hover:text-white/70"
+            }`}
+          >
+            <span>🌐</span> Resto del Mundo
+          </button>
+        </div>
+      </div>
+
       {/* Plan switch container */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Option 1: Envíos Masivos */}
@@ -249,34 +277,7 @@ export default function PagoClient({ cliente, planesPrincipales = [] }) {
               </div>
             )}
 
-            {/* Region Selector */}
-            <div className="mb-5">
-              <p className="text-white/40 text-xs mb-2">¿Desde dónde estás operando?</p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRegion("AR")}
-                  className={`flex-1 py-2.5 rounded-xl border text-center transition-all text-xs font-semibold flex items-center justify-center gap-1.5 ${
-                    region === "AR"
-                      ? "border-accent/50 bg-accent/8 text-white"
-                      : "border-white/[0.08] hover:border-white/[0.15] bg-white/[0.02] text-white/40"
-                  }`}
-                >
-                  <span>🇦🇷</span> Argentina
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRegion("INT")}
-                  className={`flex-1 py-2.5 rounded-xl border text-center transition-all text-xs font-semibold flex items-center justify-center gap-1.5 ${
-                    region === "INT"
-                      ? "border-accent/50 bg-accent/8 text-white"
-                      : "border-white/[0.08] hover:border-white/[0.15] bg-white/[0.02] text-white/40"
-                  }`}
-                >
-                  <span>🌐</span> Resto del Mundo
-                </button>
-              </div>
-            </div>
+
 
             <div className="h-px bg-white/[0.06] my-4" />
 
