@@ -21,10 +21,9 @@ export async function POST(request) {
     let accessToken = process.env.MP_ACCESS_TOKEN;
 
     // 1 — Resolve Seller Access Token based on mpUserId in the webhook body
-    // If the notification is live (live_mode: true), we resolve the connected co-seller's token.
-    // If the notification is sandbox (live_mode: false), we MUST query it using the main sandbox token to prevent 404 errors.
-    const isLive = body?.live_mode === true;
-    if (isLive && mpUserId) {
+    // We resolve the connected seller's token from mp_vendedores if mpUserId is present.
+    // If the seller is not connected or not found, we fallback to the main MP_ACCESS_TOKEN.
+    if (mpUserId) {
       const { data: vendedor } = await adminDb
         .from("mp_vendedores")
         .select("access_token")
