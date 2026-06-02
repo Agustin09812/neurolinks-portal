@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
 
 const FEATURES_MAP = {
   masivo_meta: [
@@ -41,6 +43,16 @@ function CheckIcon() {
 export default function PagoClient({ cliente, planesPrincipales = [] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      window.location.href = "/portal";
+    } catch (err) {
+      console.error("Error signing out:", err);
+    }
+  };
   
   // Set defaults: plan_tipo = 'masivo_meta', lineas_cantidad = 1 as per user requirements
   const [activePlan, setActivePlan] = useState("masivo_meta");
@@ -106,7 +118,17 @@ export default function PagoClient({ cliente, planesPrincipales = [] }) {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto relative pt-12 md:pt-4">
+      {/* Logout button */}
+      <div className="absolute top-0 right-0 z-20">
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 text-[10px] md:text-xs font-semibold text-white/40 hover:text-white/80 transition-colors bg-white/[0.02] border border-white/[0.08] hover:border-white/[0.15] rounded-xl backdrop-blur-md"
+        >
+          Cerrar sesión
+        </button>
+      </div>
+
       {/* Header */}
       <div className="text-center mb-8">
         <p className="text-white/25 text-xs font-heading font-semibold tracking-widest uppercase mb-3 animate-pulse">
