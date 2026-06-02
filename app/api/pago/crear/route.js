@@ -19,8 +19,9 @@ export async function POST() {
     if (!cliente) return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
 
     // Dynamic Sandbox Redirect: Binds the customer ID as external_reference to your custom test plan
-    const mainToken = process.env.MP_ACCESS_TOKEN || "";
-    if (mainToken.startsWith("TEST-")) {
+    const mainToken = (process.env.MP_ACCESS_TOKEN || "").replace(/['"]/g, "").trim();
+    const isSandbox = mainToken.startsWith("TEST-") || (process.env.NEXT_PUBLIC_SITE_URL || "").includes("railway.app");
+    if (isSandbox) {
       console.log("[Crear Pago] Running in SANDBOX/TEST mode. Instantly redirecting to custom test subscription link.");
       const testPlanId = "22efa35a74c941cfbc4e84bb6a2dd306";
       const initPoint = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${testPlanId}&external_reference=${cliente.id}`;
