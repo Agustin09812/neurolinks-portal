@@ -22,10 +22,41 @@ export async function POST() {
     const mainToken = (process.env.MP_ACCESS_TOKEN || "").replace(/['"]/g, "").trim();
     const isSandbox = mainToken.startsWith("TEST-") || (process.env.NEXT_PUBLIC_SITE_URL || "").includes("railway.app");
     if (isSandbox) {
-      console.log("[Crear Pago] Running in SANDBOX/TEST mode. Instantly redirecting to custom test subscription link.");
-      const testPlanId = "22efa35a74c941cfbc4e84bb6a2dd306";
-      const initPoint = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${testPlanId}&external_reference=${cliente.id}`;
-      return NextResponse.json({ init_point: initPoint });
+      console.log("[Crear Pago] Running in SANDBOX/TEST mode. Creating test plan dynamically under configured seller.");
+      try {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+        const abonoPrice = Number(cliente.abono) || 100; // Real price or fallback $100 for test
+        
+        const mpPlanRes = await fetch("https://api.mercadopago.com/preapproval_plan", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${mainToken}`,
+          },
+          body: JSON.stringify({
+            reason: `Suscripción Neurolinks - ${cliente.plan || "Test"}`,
+            auto_recurring: {
+              frequency: 1,
+              frequency_type: "months",
+              transaction_amount: abonoPrice,
+              currency_id: "ARS",
+            },
+            back_url: `${siteUrl}/portal/pago/exito`,
+          }),
+        });
+
+        const mpPlanData = await mpPlanRes.json();
+        if (mpPlanRes.ok && mpPlanData.init_point) {
+          const initPoint = `${mpPlanData.init_point}&external_reference=${cliente.id}`;
+          return NextResponse.json({ init_point: initPoint });
+        } else {
+          console.error("[Crear Pago Sandbox] MP Plan creation failed:", mpPlanData);
+          throw new Error(mpPlanData.message || "Error al crear el plan dinámico en Sandbox.");
+        }
+      } catch (sandboxPlanErr) {
+        console.error("[Crear Pago Sandbox] Error:", sandboxPlanErr);
+        return NextResponse.json({ error: sandboxPlanErr.message }, { status: 500 });
+      }
     }
 
     const adminDb = createAdminClient();
