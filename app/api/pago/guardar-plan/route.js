@@ -38,6 +38,12 @@ export async function POST(request) {
         lineas_cantidad: selectedLines,
         plan: planConfig.nombre,
         abono: planConfig.precio,
+        backoffice_activado: false,
+        deployment_url: null,
+        deployment_urls: [],
+        tokens_backoffice: [],
+        token_backoffice: null,
+        mp_preapproval_id: null,
         updated_at: new Date().toISOString(),
       })
       .eq("auth_user_id", user.id)
