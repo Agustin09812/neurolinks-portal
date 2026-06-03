@@ -19,7 +19,13 @@ function ExitoPageContent() {
     const MAX    = 60; // 5 min total
 
     const associateAndPoll = async () => {
-      const preapprovalId = searchParams.get("preapproval_id");
+      let preapprovalId = searchParams.get("preapproval_id");
+      if (!preapprovalId) {
+        const extRef = searchParams.get("external_reference");
+        if (extRef && extRef.length === 32) {
+          preapprovalId = extRef;
+        }
+      }
       
       // 1. Link subscription ID to the current authenticated client if present
       if (preapprovalId) {
