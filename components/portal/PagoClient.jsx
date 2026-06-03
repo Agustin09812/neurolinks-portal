@@ -117,6 +117,30 @@ export default function PagoClient({ cliente, planesPrincipales = [] }) {
     }
   };
 
+  const handlePayTrial = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      // 1. Guardar el plan seleccionado en base de datos
+      const saveRes = await fetch("/api/pago/guardar-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan_tipo: activePlan,
+          lineas_cantidad: linesCount
+        })
+      });
+      const saveData = await saveRes.json();
+      if (!saveRes.ok) throw new Error(saveData.error || "Error al registrar el plan elegido.");
+
+      // 2. Redirigir al checkout de prueba gratis de Mercado Pago con el external_reference
+      window.location.href = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=d1b5072b3bc94c8ba6a3b82737fa28cc&external_reference=${cliente.id}`;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto relative pt-12 md:pt-4">
       {/* Logout button */}
@@ -366,6 +390,17 @@ export default function PagoClient({ cliente, planesPrincipales = [] }) {
                     : "Contactar a Soporte (PayPal) →"
                 }
               </button>
+
+              {region === "AR" && (
+                <button
+                  type="button"
+                  onClick={handlePayTrial}
+                  disabled={loading}
+                  className="w-full py-3 rounded-xl border border-white/[0.08] hover:border-emerald-500/30 bg-emerald-500/[0.04] text-emerald-400 hover:text-white font-heading font-semibold text-xs transition-all hover:scale-[1.02] hover:bg-emerald-500/[0.08] disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Preparando checkout..." : "🎁 Iniciar Prueba Gratis →"}
+                </button>
+              )}
 
               <p className="text-center text-white/20 text-[9px]">
                 {region === "AR" 
