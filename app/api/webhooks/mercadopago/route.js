@@ -58,22 +58,22 @@ export async function POST(request) {
                           paymentData.point_of_interaction?.transaction_data?.subscription_id;
 
     if (!clienteId && preapprovalId) {
-      console.log(`[Webhook] Payment lacks external_reference but has preapproval_id/subscription_id '${preapprovalId}'. Fetching subscription details...`);
+      console.log(`[Webhook] Payment lacks external_reference but has preapproval_id/subscription_id '${preapprovalId}'. Searching in database...`);
       try {
-        const preapprovalRes = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
-          headers: {
-            "Authorization": `Bearer ${accessToken}`,
-          }
-        });
-        if (preapprovalRes.ok) {
-          const preapprovalData = await preapprovalRes.json();
-          clienteId = preapprovalData.external_reference;
-          console.log(`[Webhook] Successfully resolved external_reference '${clienteId}' from subscription.`);
+        const { data: matchedClient } = await adminDb
+          .from("clientes")
+          .select("id")
+          .eq("mp_preapproval_id", String(preapprovalId))
+          .single();
+
+        if (matchedClient) {
+          clienteId = matchedClient.id;
+          console.log(`[Webhook] Successfully resolved client ID '${clienteId}' from database using preapproval_id.`);
         } else {
-          console.warn(`[Webhook] Failed to fetch subscription details:`, preapprovalRes.statusText);
+          console.warn(`[Webhook] No client found in database matching preapproval_id '${preapprovalId}'`);
         }
-      } catch (subErr) {
-        console.error("[Webhook] Error fetching subscription details:", subErr);
+      } catch (dbErr) {
+        console.error("[Webhook] Error querying client by preapproval_id:", dbErr);
       }
     }
 
