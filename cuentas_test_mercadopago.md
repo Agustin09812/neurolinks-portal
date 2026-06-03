@@ -14,9 +14,9 @@ Este documento contiene el registro oficial de las cuentas de prueba (compradore
 | Nombre de la Cuenta | Rol | User ID | Usuario (Email / Nickname) | Contraseña | Código de Verificación |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Comprador Neuro Test Arg1** | 🛒 Comprador | `3404523658` | `TESTUSER3688959288854853262` | `DOnzlO58Tr` | `523658` |
-| **Comprador Neuro Test Arg2** | 🛒 Comprador | `3404523660` | `TESTUSER4619...` *(Copiar del Panel)* | `JbRLhvUdqL` | `523660` |
-| **Vendedor Neuro Test Arg** | 🏪 Vendedor | `3404523654` | `TESTUSER4574...` *(Copiar del Panel)* | `2RShtcuev0` | `523654` |
-| **Comprador Neuro Test Arg3** | 🛒 Comprador | `3404739264` | `TESTUSER3321...` *(Copiar del Panel)* | `AFaXBvgMfp` | `739264` |
+| **Comprador Neuro Test Arg2** | 🛒 Comprador | `3404523660` | `TESTUSER4619105897426233159` | `JbRLhvUdqL` | `523660` |
+| **Vendedor Neuro Test Arg** | 🏪 Vendedor | `3404523654` | `TESTUSER4574573444866479759` | `DA0E05C0#faa3#4063#` | `523654` |
+| **Comprador Neuro Test Arg3** | 🛒 Comprador | `3404739264` | `TESTUSER3321286341912408824` | `AFaXBvgMfp` | `739264` |
 
 ---
 

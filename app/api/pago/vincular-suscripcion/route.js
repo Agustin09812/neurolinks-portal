@@ -35,16 +35,17 @@ export async function POST(request) {
 
     console.log(`[Vincular Suscripción] Successfully linked client ${data.id} to subscription ${preapprovalId}`);
 
-    // Fallback: If not activated, trigger activation/deployment directly
+    // Fallback: If not activated, trigger activation/deployment directly in background to avoid HTTP timeout
     if (!data.backoffice_activado) {
-      console.log(`[Vincular Suscripción] Client ${data.id} is not yet activated. Triggering activation fallback...`);
-      try {
-        const adminDb = createAdminClient();
-        await activateClientPortal(data.id, adminDb);
-        console.log(`[Vincular Suscripción] Activation fallback completed successfully for client ${data.id}`);
-      } catch (actErr) {
-        console.error(`[Vincular Suscripción] Activation fallback failed for client ${data.id}:`, actErr);
-      }
+      console.log(`[Vincular Suscripción] Client ${data.id} is not yet activated. Triggering activation fallback in background...`);
+      const adminDb = createAdminClient();
+      activateClientPortal(data.id, adminDb)
+        .then((res) => {
+          console.log(`[Vincular Suscripción] Background activation fallback completed for client ${data.id}:`, res);
+        })
+        .catch((actErr) => {
+          console.error(`[Vincular Suscripción] Background activation fallback failed for client ${data.id}:`, actErr);
+        });
     } else {
       console.log(`[Vincular Suscripción] Client ${data.id} is already activated.`);
     }

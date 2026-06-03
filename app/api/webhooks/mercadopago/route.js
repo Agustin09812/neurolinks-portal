@@ -90,10 +90,15 @@ export async function POST(request) {
       return NextResponse.json({ ok: true, message: "Ignored invalid external_reference format" });
     }
 
-    // Trigger the shared client portal activation
-    console.log(`[Webhook] Activating portal for client ID '${clienteId}'`);
-    const activation = await activateClientPortal(clienteId, adminDb);
-    console.log(`[Webhook] Activation status for client ID '${clienteId}':`, activation);
+    // Trigger the shared client portal activation in background to prevent MP webhook timeout
+    console.log(`[Webhook] Activating portal in background for client ID '${clienteId}'`);
+    activateClientPortal(clienteId, adminDb)
+      .then((res) => {
+        console.log(`[Webhook] Background activation completed for client ID '${clienteId}':`, res);
+      })
+      .catch((actErr) => {
+        console.error(`[Webhook] Background activation failed for client ID '${clienteId}':`, actErr);
+      });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
