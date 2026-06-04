@@ -24,6 +24,36 @@ export default function DashboardClient({ user, initialClientes }) {
   // Check if this user profile has administrator access (at least one client is admin)
   const isAdmin = clientes.some(c => c.is_admin);
 
+  const [deletingId, setDeletingId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(null);
+
+  const handleDelete = (cliente) => {
+    setShowConfirmModal(cliente);
+  };
+
+  const confirmDelete = async () => {
+    if (!showConfirmModal) return;
+    const targetId = showConfirmModal.id;
+    setDeletingId(targetId);
+    setShowConfirmModal(null);
+    try {
+      const res = await fetch("/api/portal/eliminar-producto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: targetId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al eliminar la instancia");
+
+      // Remove from local list
+      setClientes(prev => prev.filter(c => c.id !== targetId));
+    } catch (err) {
+      alert(err.message || "Error al eliminar la instancia");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col justify-between bg-transparent text-white relative overflow-x-hidden">
       
@@ -258,15 +288,31 @@ export default function DashboardClient({ user, initialClientes }) {
                         </svg>
                       </a>
                     ) : (
-                      <Link
-                        href={`/portal/pago?id=${cliente.id}`}
-                        className="w-full flex items-center justify-center gap-2 bg-amber-500/[0.06] hover:bg-amber-500 border border-amber-500/20 hover:border-amber-500 rounded-xl py-3 text-xs font-semibold text-amber-400 hover:text-white transition-all duration-200"
-                      >
-                        Pagar y Activar
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                        </svg>
-                      </Link>
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/portal/pago?id=${cliente.id}`}
+                          disabled={deletingId === cliente.id}
+                          className={`flex-1 flex items-center justify-center gap-1.5 bg-amber-500/[0.06] hover:bg-amber-500 border border-amber-500/20 hover:border-amber-500 rounded-xl py-3 text-xs font-semibold text-amber-400 hover:text-white transition-all duration-200 ${
+                            deletingId === cliente.id ? "opacity-40 pointer-events-none" : ""
+                          }`}
+                        >
+                          Pagar y Activar
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                          </svg>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(cliente)}
+                          disabled={deletingId === cliente.id}
+                          className="px-3.5 flex items-center justify-center bg-red-500/[0.04] hover:bg-red-500 border border-red-500/20 hover:border-red-500 rounded-xl text-red-400 hover:text-white transition-all duration-200 disabled:opacity-40 shrink-0"
+                          title="Eliminar instancia impaga"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.34 9m-4.78 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                          </svg>
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -298,6 +344,41 @@ export default function DashboardClient({ user, initialClientes }) {
       <footer className="relative z-10 py-6 text-center text-white/20 text-xs border-t border-white/[0.04]">
         Neurolinks Portal © {new Date().getFullYear()} · Todos los derechos reservados.
       </footer>
+
+      {/* Custom Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm transition-all duration-300">
+          <div className="glass-strong w-full max-w-md p-6 border border-white/[0.08] shadow-[0_0_50px_rgba(0,0,0,0.5)] transform scale-100 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-4 text-amber-400">
+              <svg className="w-6.5 h-6.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <h3 className="font-heading font-extrabold text-white text-lg">¿Confirmas eliminar la instancia?</h3>
+            </div>
+            
+            <p className="text-white/60 text-sm mb-6 leading-relaxed">
+              Estás por eliminar de forma permanente la instancia impaga de <strong className="text-white">"{showConfirmModal.empresa || showConfirmModal.proyecto_slug}"</strong> (subdominio: <code className="text-accent-light font-mono text-xs">{showConfirmModal.proyecto_slug}.clientesneurolinks.com</code>). Esta acción no se puede deshacer.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(null)}
+                className="px-4 py-2.5 text-xs font-semibold text-white/50 hover:text-white transition-colors bg-white/[0.02] border border-white/[0.08] hover:border-white/[0.15] rounded-xl"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="px-4 py-2.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-500 border border-red-600/30 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.2)] hover:shadow-[0_0_20px_rgba(220,38,38,0.3)]"
+              >
+                Sí, eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
