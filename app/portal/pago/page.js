@@ -12,7 +12,7 @@ export default async function PagoPage({ searchParams }) {
 
   let query = supabase
     .from("clientes")
-    .select("id, nombre, plan, abono, backoffice_activado, deployment_url")
+    .select("id, nombre, plan, abono, backoffice_activado, deployment_url, vendedor_id")
     .eq("auth_user_id", user.id);
 
   if (id) {
@@ -37,38 +37,40 @@ export default async function PagoPage({ searchParams }) {
     .eq("auth_user_id", user.id);
   const isAdmin = userClientes?.some(c => c.is_admin) || false;
 
-  // Fetch dynamic plans from the principal seller to show official subscription prices
+  // Fetch dynamic plans from the assigned seller (or fallback to principal seller) to show official subscription prices
   let planesPrincipales = [];
   try {
-    let sellerId = null;
+    let sellerId = cliente.vendedor_id;
 
-    // 1. Try to find the seller by the principal user_id '39957203' (from MP_ACCESS_TOKEN)
-    const { data: mainSeller } = await supabase
-      .from("mp_vendedores")
-      .select("id")
-      .eq("mp_user_id", "39957203")
-      .single();
-
-    if (mainSeller) {
-      sellerId = mainSeller.id;
-    } else {
-      // 2. Fallback: get the first registered seller
-      const { data: firstSeller } = await supabase
+    if (!sellerId) {
+      // 1. Try to find the seller by the principal user_id '39957203' (from MP_ACCESS_TOKEN)
+      const { data: mainSeller } = await supabase
         .from("mp_vendedores")
         .select("id")
-        .order("created_at", { ascending: true })
-        .limit(1)
+        .eq("mp_user_id", "39957203")
         .single();
-      
-      if (firstSeller) {
-        sellerId = firstSeller.id;
+
+      if (mainSeller) {
+        sellerId = mainSeller.id;
+      } else {
+        // 2. Fallback: get the first registered seller
+        const { data: firstSeller } = await supabase
+          .from("mp_vendedores")
+          .select("id")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .single();
+        
+        if (firstSeller) {
+          sellerId = firstSeller.id;
+        }
       }
     }
 
     if (sellerId) {
       const { data: plans } = await supabase
         .from("mp_planes")
-        .select("plan_tipo, lineas_cantidad, monto")
+        .select("plan_tipo, lineas_cantidad, monto, mp_plan_id, init_point")
         .eq("vendedor_id", sellerId);
       
       if (plans) {

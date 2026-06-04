@@ -141,8 +141,14 @@ export default function PagoClient({ cliente, planesPrincipales = [], isAdmin = 
       const saveData = await saveRes.json();
       if (!saveRes.ok) throw new Error(saveData.error || "Error al registrar el plan elegido.");
 
-      // 2. Redirigir al checkout de prueba gratis de Mercado Pago con el external_reference
-      window.location.href = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=c350d9dbf376432fac1940ed153c8325&external_reference=${cliente.id}`;
+      // 2. Resolver el preapproval_plan_id para la prueba gratis
+      // Si la lista de planes del vendedor tiene un plan de prueba registrado (trial_test), lo usamos.
+      // De lo contrario, usamos el de la cuenta principal por defecto.
+      const trialPlan = (planesPrincipales || []).find(p => p.plan_tipo === "trial_test");
+      const planId = trialPlan?.mp_plan_id || "c350d9dbf376432fac1940ed153c8325";
+
+      // 3. Redirigir al checkout de prueba gratis de Mercado Pago con el external_reference
+      window.location.href = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planId}&external_reference=${cliente.id}`;
     } catch (err) {
       setError(err.message);
       setLoading(false);
