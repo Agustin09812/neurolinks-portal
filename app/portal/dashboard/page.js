@@ -13,7 +13,17 @@ export default async function DashboardPage() {
     .from("clientes")
     .select("id, nombre, plan, abono, backoffice_activado, deployment_url, deployment_urls, plan_tipo, lineas_cantidad, proyecto_slug, empresa, created_at, is_admin, mp_preapproval_id")
     .eq("auth_user_id", user.id)
+    .eq("is_deleted", false)
     .order("created_at", { ascending: false });
 
-  return <DashboardClient user={user} initialClientes={clientes || []} />;
+  const { data: adminCheck } = await supabase
+    .from("clientes")
+    .select("is_admin")
+    .eq("auth_user_id", user.id)
+    .eq("is_admin", true)
+    .limit(1);
+
+  const isUserAdmin = !!(adminCheck && adminCheck.length > 0);
+
+  return <DashboardClient user={user} initialClientes={clientes || []} isUserAdmin={isUserAdmin} />;
 }
