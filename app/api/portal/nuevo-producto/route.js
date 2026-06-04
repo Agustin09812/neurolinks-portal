@@ -43,6 +43,20 @@ export async function POST(request) {
       return NextResponse.json({ error: `El slug "${cleanSlug}" ya está registrado en Neurolinks. Elegí otro.` }, { status: 400 });
     }
 
+    // Check if the user is an admin (has any existing client row with is_admin = true)
+    const { data: existingAdminCheck } = await supabase
+      .from("clientes")
+      .select("is_admin")
+      .eq("auth_user_id", user.id)
+      .eq("is_admin", true)
+      .limit(1);
+
+    const isNewClientAdmin = !!(
+      (existingAdminCheck && existingAdminCheck.length > 0) ||
+      user.email === "duskcodes.pereyrahugo@gmail.com" ||
+      user.email === "neurolinksarg@gmail.com"
+    );
+
     // Resolve default plan configuration (will be re-selected on the payment step)
     const selectedPlanTipo = "masivo_meta";
     const selectedLines = 1;
@@ -68,6 +82,7 @@ export async function POST(request) {
         tokens_backoffice: [],
         token_backoffice: null,
         mp_preapproval_id: null,
+        is_admin: isNewClientAdmin,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
