@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { activateClientPortal } from "@/lib/railway";
+import crypto from "crypto";
 
 // Helper function to fetch details from Mercado Pago REST API
 async function fetchMp(endpoint, accessToken) {
@@ -25,7 +26,53 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const secret = process.env.MP_WEBHOOK_SECRET;
     const url  = new URL(request.url);
+
+    // 0 — Verify Mercado Pago Signature if secret is configured
+    if (secret) {
+      const signatureHeader = request.headers.get("x-signature");
+      const requestId = request.headers.get("x-request-id");
+
+      console.log(`[Webhook] Signature Verification | x-signature: ${signatureHeader} | x-request-id: ${requestId}`);
+
+      let ts = "";
+      let v1 = "";
+      if (signatureHeader) {
+        const parts = signatureHeader.split(",");
+        for (const part of parts) {
+          const eqIndex = part.indexOf("=");
+          if (eqIndex !== -1) {
+            const key = part.substring(0, eqIndex).trim();
+            const value = part.substring(eqIndex + 1).trim();
+            if (key === "ts") ts = value;
+            if (key === "v1") v1 = value;
+          }
+        }
+      }
+
+      if (!signatureHeader || !requestId || !ts || !v1) {
+        console.warn(`[Webhook] Rejecting request: Missing verification headers or parts. signatureHeader: ${signatureHeader}, requestId: ${requestId}, ts: ${ts}, v1: ${v1}`);
+        return NextResponse.json({ error: "Missing verification headers" }, { status: 400 });
+      }
+
+      const dataId = url.searchParams.get("data.id") || "";
+      const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
+
+      const hmac = crypto.createHmac("sha256", secret);
+      hmac.update(manifest);
+      const calculatedSignature = hmac.digest("hex");
+
+      if (calculatedSignature !== v1) {
+        console.error(`[Webhook] Rejecting request: Signature mismatch. Calculated: ${calculatedSignature}, Received: ${v1}`);
+        return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+      }
+
+      console.log("[Webhook] Signature verification successful!");
+    } else {
+      console.warn("[Webhook] MP_WEBHOOK_SECRET not defined in environment. Skipping signature verification.");
+    }
+
     const body = await request.json().catch(() => ({}));
 
     const topic     = url.searchParams.get("topic") ?? body?.type ?? body?.action;
