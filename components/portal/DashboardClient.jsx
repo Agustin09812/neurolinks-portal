@@ -65,6 +65,17 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
   const [showConfirmModal, setShowConfirmModal] = useState(null);
   const [confirmSlug, setConfirmSlug] = useState("");
 
+  const [editingClient, setEditingClient] = useState(null);
+  const [editForm, setEditForm] = useState({
+    id: "",
+    empresa: "",
+    proyecto_slug: "",
+    deployment_url: "",
+    deployment_urls: []
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+
   const handleDelete = (cliente) => {
     setConfirmSlug("");
     setShowConfirmModal(cliente);
@@ -314,6 +325,16 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
                         </div>
                         <button
                           type="button"
+                          onClick={() => handleEditClick(cliente)}
+                          className="px-3.5 flex items-center justify-center bg-white/[0.03] hover:bg-accent border border-white/[0.08] hover:border-accent/40 rounded-xl text-white transition-all duration-200 shrink-0"
+                          title="Editar Instancia"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 20.82a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleDelete(cliente)}
                           disabled={deletingId === cliente.id}
                           className="px-3.5 flex items-center justify-center bg-red-500/[0.04] hover:bg-red-500 border border-red-500/20 hover:border-red-500 rounded-xl text-red-400 hover:text-white transition-all duration-200 disabled:opacity-40 shrink-0"
@@ -419,6 +440,16 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
                             </span>
                           )}
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => handleEditClick(cliente)}
+                          className="px-3.5 flex items-center justify-center bg-white/[0.03] hover:bg-accent border border-white/[0.08] hover:border-accent/40 rounded-xl text-white transition-all duration-200 shrink-0"
+                          title="Editar Instancia"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 20.82a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                          </svg>
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(cliente)}
@@ -590,6 +621,148 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
           </div>
         );
       })()}
+
+      {/* Modal de Edición de Instancia */}
+      {editingClient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setEditingClient(null)}
+          />
+          <div className="relative z-10 w-full max-w-lg glass-modal rounded-2xl border border-white/[0.08] p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between mb-4 border-b border-white/[0.05] pb-3">
+              <h3 className="font-heading font-extrabold text-white text-lg">
+                Editar Información de la Instancia
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingClient(null)}
+                className="text-white/40 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              {editError && (
+                <div className="flex items-start gap-2 rounded-xl px-3.5 py-2.5 border border-red-500/18 bg-red-500/8 text-red-400 text-xs">
+                  <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                  <span>{editError}</span>
+                </div>
+              )}
+
+              {/* Nombre de la Empresa */}
+              <div>
+                <label className="block text-white/50 text-xs font-semibold mb-1.5 uppercase tracking-wider">
+                  Nombre de la Empresa / Organización
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.empresa}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, empresa: e.target.value }))}
+                  placeholder="Ej: Mi Empresa S.A."
+                  className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-accent/40 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none"
+                />
+              </div>
+
+              {/* Slug de Proyecto */}
+              <div>
+                <label className="block text-white/50 text-xs font-semibold mb-1.5 uppercase tracking-wider">
+                  Slug del Proyecto
+                </label>
+                <input
+                  type="text"
+                  required
+                  disabled={editingClient.backoffice_activado && !isAdmin}
+                  value={editForm.proyecto_slug}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, proyecto_slug: e.target.value }))}
+                  placeholder="ej: mi-empresa"
+                  className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-accent/40 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none font-mono"
+                />
+                {editingClient.backoffice_activado && !isAdmin && (
+                  <span className="text-[10px] text-white/30 mt-1 block">
+                    Por razones de seguridad, solo el administrador puede cambiar el slug una vez activo.
+                  </span>
+                )}
+                {isAdmin && (
+                  <span className="text-[10px] text-amber-400/80 mt-1 block">
+                    ⚠️ Cambiar el slug requiere actualizar manualmente los registros DNS de Hostinger y el custom domain en Railway.
+                  </span>
+                )}
+              </div>
+
+              {/* Dominios Personalizados */}
+              <div>
+                <label className="block text-white/50 text-xs font-semibold mb-1.5 uppercase tracking-wider">
+                  Dominios Personalizados (Hostinger)
+                </label>
+                
+                {editingClient.lineas_cantidad > 1 ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: Number(editingClient.lineas_cantidad) }).map((_, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className="text-[10px] text-white/30 w-12 font-mono shrink-0">Línea {idx + 1}:</span>
+                        <input
+                          type="text"
+                          value={editForm.deployment_urls[idx] || ""}
+                          onChange={(e) => {
+                            const newUrls = [...editForm.deployment_urls];
+                            newUrls[idx] = e.target.value;
+                            setEditForm(prev => ({ ...prev, deployment_urls: newUrls }));
+                          }}
+                          placeholder={`ej: linea${idx + 1}.miempresa.com`}
+                          className="flex-1 bg-white/[0.04] border border-white/[0.08] focus:border-accent/40 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none font-mono"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={editForm.deployment_url}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, deployment_url: e.target.value }))}
+                    placeholder="ej: app.miempresa.com"
+                    className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-accent/40 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none font-mono"
+                  />
+                )}
+                <span className="text-[10px] text-white/30 mt-1 block">
+                  Inserta el host limpio (ej: <code>app.miempresa.com</code>). Los protocolos <code>https://</code> se removerán automáticamente.
+                </span>
+              </div>
+
+              {/* Botones */}
+              <div className="flex justify-end gap-3 pt-3 border-t border-white/[0.05] mt-6">
+                <button
+                  type="button"
+                  onClick={() => setEditingClient(null)}
+                  disabled={editLoading}
+                  className="px-4 py-2.5 text-xs font-semibold text-white/50 hover:text-white transition-colors bg-white/[0.02] border border-white/[0.08] hover:border-white/[0.15] rounded-xl disabled:opacity-40"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-5 py-2.5 text-xs font-semibold text-white bg-accent hover:bg-accent-light border border-accent/30 rounded-xl transition-all shadow-[0_0_15px_rgba(0,153,255,0.15)] hover:shadow-[0_0_20px_rgba(0,153,255,0.25)] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  {editLoading && (
+                    <svg className="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  )}
+                  {editLoading ? "Guardando..." : "Guardar Cambios"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
