@@ -76,6 +76,67 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
 
+  const handleEditClick = (cliente) => {
+    setEditError("");
+    setEditingClient(cliente);
+    setEditForm({
+      id: cliente.id,
+      empresa: cliente.empresa || "",
+      proyecto_slug: cliente.proyecto_slug || "",
+      deployment_url: cliente.deployment_url || "",
+      deployment_urls: cliente.deployment_urls ? [...cliente.deployment_urls] : []
+    });
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError("");
+    try {
+      const res = await fetch("/api/portal/editar-producto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al actualizar la información");
+
+      // Update state locally
+      setClientes(prev => prev.map(c => {
+        if (c.id === editForm.id) {
+          let finalUrl = null;
+          let finalUrls = [];
+          if (editForm.deployment_urls && editForm.deployment_urls.length > 0) {
+            finalUrls = editForm.deployment_urls.map(url => {
+              if (!url) return null;
+              let cleaned = url.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, "");
+              return cleaned.split("/")[0];
+            }).filter(Boolean);
+            finalUrl = finalUrls[0] || null;
+          } else if (editForm.deployment_url) {
+            finalUrl = editForm.deployment_url.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0];
+            finalUrls = finalUrl ? [finalUrl] : [];
+          }
+
+          return {
+            ...c,
+            empresa: editForm.empresa.trim(),
+            proyecto_slug: editForm.proyecto_slug.trim().toLowerCase(),
+            deployment_url: finalUrl,
+            deployment_urls: finalUrls
+          };
+        }
+        return c;
+      }));
+
+      setEditingClient(null);
+    } catch (err) {
+      setEditError(err.message);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const handleDelete = (cliente) => {
     setConfirmSlug("");
     setShowConfirmModal(cliente);
