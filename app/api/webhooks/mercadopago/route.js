@@ -132,7 +132,15 @@ export async function POST(request) {
         mpData = await fetchMp(`/v1/payments/${resourceId}`, accessToken);
         console.log(`[Webhook] Successfully fetched payment '${resourceId}': status = ${mpData.status}`);
         
-        if (mpData.status === "approved") {
+        // Polling optimization: If payment is pending or in_process, wait 3 seconds and query again
+        if (mpData && (mpData.status === "pending" || mpData.status === "in_process")) {
+          console.log(`[Webhook] Payment '${resourceId}' is in status '${mpData.status}'. Waiting 3 seconds for approval...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          mpData = await fetchMp(`/v1/payments/${resourceId}`, accessToken);
+          console.log(`[Webhook] Re-fetched payment '${resourceId}': status = ${mpData?.status}`);
+        }
+
+        if (mpData && mpData.status === "approved") {
           clienteId = mpData.external_reference;
           preapprovalId = mpData.preapproval_id ?? 
                           mpData.point_of_interaction?.transaction_data?.subscription_id;
