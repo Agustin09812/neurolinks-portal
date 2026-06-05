@@ -71,7 +71,8 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
     empresa: "",
     proyecto_slug: "",
     deployment_url: "",
-    deployment_urls: []
+    deployment_urls: [],
+    observaciones: []
   });
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
@@ -84,7 +85,8 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
       empresa: cliente.empresa || "",
       proyecto_slug: cliente.proyecto_slug || "",
       deployment_url: cliente.deployment_url || "",
-      deployment_urls: cliente.deployment_urls ? [...cliente.deployment_urls] : []
+      deployment_urls: cliente.deployment_urls ? [...cliente.deployment_urls] : [],
+      observaciones: cliente.observaciones ? [...cliente.observaciones] : []
     });
   };
 
@@ -123,7 +125,8 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
             empresa: editForm.empresa.trim(),
             proyecto_slug: editForm.proyecto_slug.trim().toLowerCase(),
             deployment_url: finalUrl,
-            deployment_urls: finalUrls
+            deployment_urls: finalUrls,
+            observaciones: editForm.observaciones.map(o => o?.trim() || "")
           };
         }
         return c;
@@ -186,7 +189,7 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
         const supabase = createClient();
         const { data: updated, error } = await supabase
           .from("clientes")
-          .select("id, backoffice_activado, deployment_url, deployment_urls, mp_preapproval_id, plan, plan_tipo, lineas_cantidad, railway_public_url, activated_at, updated_at")
+          .select("id, backoffice_activado, deployment_url, deployment_urls, mp_preapproval_id, plan, plan_tipo, lineas_cantidad, railway_public_url, activated_at, updated_at, observaciones")
           .eq("auth_user_id", user.id)
           .eq("is_deleted", false);
 
@@ -208,7 +211,8 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
                   mp_preapproval_id: match.mp_preapproval_id,
                   plan: match.plan,
                   plan_tipo: match.plan_tipo,
-                  lineas_cantidad: match.lineas_cantidad
+                  lineas_cantidad: match.lineas_cantidad,
+                  observaciones: match.observaciones
                 };
               }
               return oldClient;
@@ -338,9 +342,18 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
                         </div>
 
                         {/* Title & Product Type */}
-                        <h3 className="font-heading font-extrabold text-white text-lg mb-1 leading-snug group-hover:text-accent-light transition-colors">
+                        <h3 className="font-heading font-extrabold text-white text-lg mb-0.5 leading-snug group-hover:text-accent-light transition-colors">
                           {cliente.empresa || cliente.proyecto_slug}
                         </h3>
+                        {cliente.observaciones && cliente.observaciones[i] ? (
+                          <p className="text-cyan-400 font-semibold text-xs mb-2">
+                            {cliente.observaciones[i]}
+                          </p>
+                        ) : (
+                          <p className="text-white/20 text-xs italic mb-2">
+                            Sin observación
+                          </p>
+                        )}
                         <p className="text-white/35 text-xs mb-4">
                           {cliente.plan}
                         </p>
@@ -447,9 +460,14 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
                     </div>
 
                     {/* Title & Product Type */}
-                    <h3 className="font-heading font-extrabold text-white text-lg mb-1 leading-snug group-hover:text-accent-light transition-colors">
+                    <h3 className="font-heading font-extrabold text-white text-lg mb-0.5 leading-snug group-hover:text-accent-light transition-colors">
                       {cliente.empresa || cliente.proyecto_slug}
                     </h3>
+                    {cliente.observaciones && cliente.observaciones[0] && (
+                      <p className="text-cyan-400 font-semibold text-xs mb-2">
+                        {cliente.observaciones[0]}
+                      </p>
+                    )}
                     <p className="text-white/35 text-xs mb-4">
                       {cliente.plan}
                     </p>
@@ -687,10 +705,10 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
       {editingClient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setEditingClient(null)}
           />
-          <div className="relative z-10 w-full max-w-lg glass-modal rounded-2xl border border-white/[0.08] p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+          <div className="relative z-10 w-full max-w-lg bg-[#0a1523]/96 backdrop-blur-md rounded-2xl border border-[#0099ff]/20 p-6 shadow-2xl shadow-[0_0_50px_rgba(0,153,255,0.18)] overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between mb-4 border-b border-white/[0.05] pb-3">
               <h3 className="font-heading font-extrabold text-white text-lg">
                 Editar Información de la Instancia
@@ -793,6 +811,49 @@ export default function DashboardClient({ user, initialClientes, isUserAdmin }) 
                 )}
                 <span className="text-[10px] text-white/30 mt-1 block">
                   Inserta el host limpio (ej: <code>app.miempresa.com</code>). Los protocolos <code>https://</code> se removerán automáticamente.
+                </span>
+              </div>
+
+              {/* Observación / Identificación de Línea */}
+              <div>
+                <label className="block text-white/50 text-xs font-semibold mb-1.5 uppercase tracking-wider">
+                  {editingClient.lineas_cantidad > 1 ? "Observaciones por Línea" : "Observación / Nota"}
+                </label>
+                
+                {editingClient.lineas_cantidad > 1 ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: Number(editingClient.lineas_cantidad) }).map((_, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className="text-[10px] text-white/30 w-12 font-mono shrink-0">Línea {idx + 1}:</span>
+                        <input
+                          type="text"
+                          value={editForm.observaciones[idx] || ""}
+                          onChange={(e) => {
+                            const newObs = [...editForm.observaciones];
+                            newObs[idx] = e.target.value;
+                            setEditForm(prev => ({ ...prev, observaciones: newObs }));
+                          }}
+                          placeholder={`ej: Línea de ${idx === 0 ? "Mariana" : idx === 1 ? "Nara" : "Guchi"}`}
+                          className="flex-1 bg-white/[0.04] border border-white/[0.08] focus:border-[#0099ff]/40 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={editForm.observaciones[0] || ""}
+                    onChange={(e) => {
+                      const newObs = [...editForm.observaciones];
+                      newObs[0] = e.target.value;
+                      setEditForm(prev => ({ ...prev, observaciones: newObs }));
+                    }}
+                    placeholder="ej: Servidor Principal / Campañas"
+                    className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-[#0099ff]/40 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none"
+                  />
+                )}
+                <span className="text-[10px] text-white/30 mt-1 block">
+                  Permite diferenciar las distintas líneas o instancias en el listado.
                 </span>
               </div>
 

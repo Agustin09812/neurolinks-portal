@@ -23,7 +23,7 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const { id, empresa, proyecto_slug, deployment_url, deployment_urls } = body;
+    const { id, empresa, proyecto_slug, deployment_url, deployment_urls, observaciones } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Falta el ID del producto a editar" }, { status: 400 });
@@ -107,6 +107,9 @@ export async function POST(request) {
     if (proyecto_slug !== undefined) updateFields.proyecto_slug = proyecto_slug.trim().toLowerCase();
     if (finalUrl !== null || (deployment_url === "")) updateFields.deployment_url = finalUrl;
     if (finalUrls.length > 0 || (deployment_urls && deployment_urls.length === 0)) updateFields.deployment_urls = finalUrls;
+    if (observaciones !== undefined && Array.isArray(observaciones)) {
+      updateFields.observaciones = observaciones.map(o => o ? o.toString().trim() : "");
+    }
 
     const { error: updateError } = await adminDb
       .from("clientes")
