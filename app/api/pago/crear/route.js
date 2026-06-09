@@ -30,13 +30,13 @@ export async function POST(request) {
 
     // Dynamic Sandbox Redirect: Binds the customer ID as external_reference to your custom test plan
     const mainToken = (process.env.MP_ACCESS_TOKEN || "").replace(/['"]/g, "").trim();
-    const isSandbox = mainToken.startsWith("TEST-");
+    const isSandbox = mainToken.startsWith("APP_USR-34");
     if (isSandbox) {
       console.log("[Crear Pago] Running in SANDBOX/TEST mode. Creating test plan dynamically under configured seller.");
       try {
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
         const abonoPrice = Number(cliente.abono) || 100; // Real price or fallback $100 for test
-        
+
         const mpPlanRes = await fetch("https://api.mercadopago.com/preapproval_plan", {
           method: "POST",
           headers: {
