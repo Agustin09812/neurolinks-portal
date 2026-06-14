@@ -13,8 +13,13 @@ export default function AdminMercadoPago() {
   useEffect(() => {
     // Read query parameters for callback status
     const params = new URLSearchParams(window.location.search);
-    if (params.get("success") === "true") {
+    const successParam = params.get("success");
+    if (successParam === "true") {
       setSuccess("¡Cuenta de Mercado Pago vinculada correctamente!");
+      // Clean query params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (successParam === "already_exists") {
+      setSuccess("La cuenta de Mercado Pago ya estaba vinculada y sus planes ya se encuentran configurados correctamente.");
       // Clean query params
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (params.get("error")) {

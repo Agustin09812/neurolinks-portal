@@ -106,7 +106,32 @@ export async function GET(request) {
       console.error("[OAuth Callback] Error fetching seller user info:", fetchUserErr.message);
     }
 
-    // Insert or Update the seller connected account
+    // Check if the seller already exists
+    const { data: existingVendedor } = await supabase
+      .from("mp_vendedores")
+      .select("id")
+      .eq("mp_user_id", String(mp_user_id))
+      .maybeSingle();
+
+    let existingPlanKeys = new Set();
+    if (existingVendedor) {
+      const { data: existingPlanes } = await supabase
+        .from("mp_planes")
+        .select("plan_tipo, lineas_cantidad")
+        .eq("vendedor_id", existingVendedor.id);
+
+      existingPlanKeys = new Set(
+        existingPlanes?.map(p => `${p.plan_tipo}_${p.lineas_cantidad}`) || []
+      );
+    }
+
+    const plansToCreate = STANDARDIZED_PLANS.filter(
+      plan => !existingPlanKeys.has(`${plan.plan_tipo}_${plan.lineas_cantidad}`)
+    );
+
+    const isAlreadyLinkedWithAllPlans = existingVendedor && plansToCreate.length === 0;
+
+    // Insert or Update the seller connected account (always update tokens)
     const { data: vendedor, error: sellerError } = await supabase
       .from("mp_vendedores")
       .upsert(
@@ -130,8 +155,13 @@ export async function GET(request) {
       throw new Error("No se pudo guardar la cuenta colectora en la base de datos.");
     }
 
-    // Automatically create standard subscription plans for this seller in Mercado Pago
-    for (const planInfo of STANDARDIZED_PLANS) {
+    if (isAlreadyLinkedWithAllPlans) {
+      console.log(`[OAuth Callback] Seller ${mp_user_id} already exists with all standardized plans. Skipping plan creation.`);
+      return NextResponse.redirect(new URL("/portal/admin/mercadopago?success=already_exists", siteUrl));
+    }
+
+    // Automatically create only missing standard subscription plans for this seller in Mercado Pago
+    for (const planInfo of plansToCreate) {
       try {
         const mpPlanRes = await fetch("https://api.mercadopago.com/preapproval_plan", {
           method: "POST",
