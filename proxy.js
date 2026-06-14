@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
-export async function middleware(request) {
+export async function proxy(request) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -28,7 +28,7 @@ export async function middleware(request) {
     const { data } = await supabase.auth.getUser();
     user = data?.user;
   } catch (authErr) {
-    console.warn("[Middleware] Invalid or expired refresh token:", authErr.message);
+    console.warn("[Proxy] Invalid or expired refresh token:", authErr.message);
     // If the session is corrupted, clear cookies and redirect back to /portal login
     const redirectRes = NextResponse.redirect(new URL("/portal", request.url));
     

@@ -170,7 +170,6 @@ function LoginForm({ onSwitch, onForgot }) {
       }
 
       router.push("/portal/dashboard");
-      router.refresh();
     }
   };
 
