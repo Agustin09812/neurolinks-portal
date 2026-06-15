@@ -21,11 +21,48 @@ export async function proxy(request) {
     }
   );
 
-  await supabase.auth.getUser();
+  let user = null;
+  const { pathname } = request.nextUrl;
+
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data?.user;
+  } catch (authErr) {
+    console.warn("[Proxy] Invalid or expired refresh token:", authErr.message);
+    // If the session is corrupted, clear cookies and redirect back to /portal login
+    const redirectRes = NextResponse.redirect(new URL("/portal", request.url));
+    
+    // Find all cookies matching supabase auth naming patterns and clear them
+    const cookieList = request.cookies.getAll();
+    cookieList.forEach(c => {
+      if (c.name.includes("sb-") || c.name.includes("supabase")) {
+        redirectRes.cookies.delete(c.name);
+      }
+    });
+    return redirectRes;
+  }
+
+  // Authenticated user at login page → send to dashboard
+  if (pathname === "/portal" && user) {
+    return NextResponse.redirect(new URL("/portal/dashboard", request.url));
+  }
+
+  // Protect payment and dashboard routes from unauthenticated users
+  if ((pathname === "/portal/pago" || pathname.startsWith("/portal/pago/")) && !user) {
+    return NextResponse.redirect(new URL("/portal", request.url));
+  }
+
+  if ((pathname === "/portal/dashboard" || pathname.startsWith("/portal/dashboard/")) && !user) {
+    return NextResponse.redirect(new URL("/portal", request.url));
+  }
+
+  if (pathname.match(/^\/portal\/.+\/dashboard/) && !user) {
+    return NextResponse.redirect(new URL("/portal", request.url));
+  }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/portal/:path*"],
+  matcher: ["/portal", "/portal/:path*"],
 };
